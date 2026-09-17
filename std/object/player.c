@@ -130,6 +130,13 @@ void kill_mob(string name)
     if (!ML) { write("Monster system unavailable.\n"); return; }
     mob = ML->query_mob_by_name(name);
     if (!mob) { write("No such monster: " + name + "\n"); return; }
+    {
+        int *room_mobs = room ? room->query("mobs") : 0;
+        if (pointerp(room_mobs) && member_array(mob["id"], room_mobs) < 0) {
+            write("There is no " + mob["name"] + " here.\n");
+            return;
+        }
+    }
     mob_hp = mob["hp"];
     p_hp = query("hp");
     p_atk = calc_atk();
@@ -506,6 +513,19 @@ void look_room()
         write("Exits:");
         for (i = 0; i < sizeof(dirs); i++) write(" " + dirs[i]);
         write("\n");
+    }
+    if (room && !room->query("no_combat")) {
+        int *mobs = room->query("mobs");
+        if (pointerp(mobs) && sizeof(mobs) > 0) {
+            object ML = find_object("/std/loader/mob_loader");
+            string mnames = "";
+            int j;
+            for (j = 0; j < sizeof(mobs); j++) {
+                mapping m = ML->query_mob(mobs[j]);
+                if (m) mnames += (mnames == "" ? "" : ", ") + m["name"];
+            }
+            write("Monsters: " + mnames + "\n");
+        }
     }
 }
 
