@@ -20,6 +20,11 @@ int has_skill(int id);
 int learn_skill(string name);
 void cast_skill(string skillname, string target);
 void skill_attack_mob(mapping sk, string target);
+void add_item(int id, int amount);
+int remove_item(int id, int amount);
+void loot_mob(int mob_id);
+int weapon_atk();
+int armor_def();
 
 // ===== Stats (HP/SP) =====
 void recompute_max()
@@ -42,6 +47,8 @@ void setup(string n)
     set("job_exp", 0);
     set("stat_points", 20);
     set("skills", ([]));
+    set("inventory", ([]));
+    set("equipped", ([]));
     choose_job(0);   // start as Novice
 }
 
@@ -102,12 +109,12 @@ int allocate_stat(string stat)
 // ===== Combat =====
 int calc_atk()
 {
-    return 10 + query_attr("str") * 2 + query_attr("dex") + query("base_level") * 2;
+    return 10 + query_attr("str") * 2 + query_attr("dex") + query("base_level") * 2 + weapon_atk();
 }
 
 int calc_def()
 {
-    return query_attr("vit") / 2 + query("base_level");
+    return query_attr("vit") / 2 + query("base_level") + armor_def();
 }
 
 void kill_mob(string name)
@@ -140,12 +147,145 @@ void kill_mob(string name)
     if (mob_hp <= 0) {
         write("You defeated the " + mob["name"] + "!\n");
         gain_exp(mob["base_exp"], mob["job_exp"]);
+        loot_mob(mob["id"]);
     } else {
         write("You were defeated!\n");
         p_hp = query("max_hp") / 10;
     }
     if (p_hp < 1) p_hp = 1;
     set("hp", p_hp);
+}
+
+// ===== Inventory / Equipment / Items =====
+int query_item_amount(int id)
+{
+    mapping inv = query("inventory");
+    if (!mapp(inv)) return 0;
+    return inv[id] ? inv[id] : 0;
+}
+
+void add_item(int id, int amount)
+{
+    mapping inv = query("inventory");
+    if (!mapp(inv)) inv = ([]);
+    inv[id] = (inv[id] ? inv[id] : 0) + amount;
+    set("inventory", inv);
+}
+
+int remove_item(int id, int amount)
+{
+    mapping inv = query("inventory");
+    if (!mapp(inv) || !inv[id] || inv[id] < amount) return 0;
+    inv[id] -= amount;
+    if (inv[id] <= 0) map_delete(inv, id);
+    set("inventory", inv);
+    return 1;
+}
+
+void loot_mob(int mob_id)
+{
+    object DR = find_object("/std/loader/drop_loader");
+    object DL = find_object("/std/loader/db_loader");
+    mapping *drops;
+    int i;
+    if (!DR) return;
+    drops = DR->query_drops(mob_id);
+    if (!pointerp(drops)) return;
+    for (i = 0; i < sizeof(drops); i++) {
+        mapping d = drops[i];
+        if (random(10000) < d["rate"]) {
+            add_item(d["item_id"], 1);
+            mapping item = DL->query_item(d["item_id"]);
+            write("  Dropped: " + (item ? item["name"] : "an item") + "\n");
+        }
+    }
+}
+
+int weapon_atk()
+{
+    object DL = find_object("/std/loader/db_loader");
+    mapping eq = query("equipped");
+    mapping item;
+    if (!mapp(eq) || !eq["weapon"]) return 0;
+    item = DL->query_item(eq["weapon"]);
+    return item ? item["atk"] : 0;
+}
+
+int armor_def()
+{
+    object DL = find_object("/std/loader/db_loader");
+    mapping eq = query("equipped");
+    mapping item;
+    if (!mapp(eq) || !eq["armor"]) return 0;
+    item = DL->query_item(eq["armor"]);
+    return item ? item["def"] : 0;
+}
+
+void list_inventory()
+{
+    object DL = find_object("/std/loader/db_loader");
+    mapping inv = query("inventory");
+    mapping eq = query("equipped");
+    int *ids;
+    int i;
+    if (!mapp(inv) || sizeof(inv) == 0) write("Your inventory is empty.\n");
+    else {
+        ids = keys(inv);
+        write("Inventory:\n");
+        for (i = 0; i < sizeof(ids); i++) {
+            mapping item = DL->query_item(ids[i]);
+            write("  " + (item ? item["name"] : "#" + ids[i]) + " x" + inv[ids[i]] + "\n");
+        }
+    }
+    if (mapp(eq) && (eq["weapon"] || eq["armor"])) {
+        write("Equipped:\n");
+        if (eq["weapon"]) { mapping w = DL->query_item(eq["weapon"]); write("  Weapon: " + (w ? w["name"] : "?") + "\n"); }
+        if (eq["armor"])  { mapping a = DL->query_item(eq["armor"]);  write("  Armor: "  + (a ? a["name"] : "?") + "\n"); }
+    }
+}
+
+void equip_item(string name)
+{
+    object DL = find_object("/std/loader/db_loader");
+    mapping item = DL->query_item_by_name(name);
+    mapping eq;
+    string slot;
+    if (!item) { write("No such item: " + name + "\n"); return; }
+    if (item["type"] != 4 && item["type"] != 5) { write(item["name"] + " is not equippable.\n"); return; }
+    if (query_item_amount(item["id"]) < 1) { write("You don't have a " + item["name"] + ".\n"); return; }
+    slot = (item["type"] == 4) ? "weapon" : "armor";
+    eq = query("equipped");
+    if (!mapp(eq)) eq = ([]);
+    if (eq[slot]) add_item(eq[slot], 1);   // 歸還舊裝備
+    remove_item(item["id"], 1);
+    eq[slot] = item["id"];
+    set("equipped", eq);
+    write("You equipped " + item["name"] + ".\n");
+}
+
+void unequip_slot(string slot)
+{
+    mapping eq = query("equipped");
+    if (!mapp(eq) || !eq[slot]) { write("Nothing equipped in " + slot + ".\n"); return; }
+    add_item(eq[slot], 1);
+    map_delete(eq, slot);
+    set("equipped", eq);
+    write("You unequipped " + slot + ".\n");
+}
+
+void use_item(string name)
+{
+    object DL = find_object("/std/loader/db_loader");
+    object GL = find_object("/std/system/game_lib");
+    mapping item = DL->query_item_by_name(name);
+    int heal;
+    if (!item) { write("No such item: " + name + "\n"); return; }
+    if (item["type"] != 0) { write("You can't use " + item["name"] + " like that.\n"); return; }
+    if (query_item_amount(item["id"]) < 1) { write("You don't have a " + item["name"] + ".\n"); return; }
+    remove_item(item["id"], 1);
+    heal = query("max_hp") * 30 / 100;
+    GL->apply_heal(this_object(), heal);   // ← 統一函數庫
+    write("You used " + item["name"] + " and recovered " + heal + " HP.\n");
 }
 
 // ===== Skills =====
@@ -291,7 +431,7 @@ void do_rest()
 
 string query_save_file()
 {
-    return "/data/players/" + query("id");
+    return "/data/players/" + query("name");
 }
 
 void show_stats()

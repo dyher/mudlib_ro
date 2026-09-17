@@ -1,12 +1,10 @@
-// rAthena item_db.txt sample - 10 entries
-// ID,Name,Type,Buy,Sell,Weight,ATK,DEF,Range,Slots,Job,Upper,Gender,Loc,wLV,eLV,View,Script
-1201,Knife,4,50,25,40,17,,15,,,,4,,,1,
-1202,Dagger,4,800,400,40,25,,15,,,,4,,,2,
-1203,Stiletto,4,7000,3500,60,50,,15,,,,4,,,3,
-1204,Gladius,4,18000,9000,60,90,,15,,,,4,,,4,
-1205,Sword,4,100,50,50,25,,15,,,,5,,,1,
-1206,Falchion,4,2300,1150,70,39,,15,,,,5,,,2,
-1207,Blade,4,5000,2500,80,53,,15,,,,5,,,3,
-1208,Rapier,4,11300,5650,70,70,,15,,,,5,,,4,
-1209,Scimitar,4,14700,7350,70,85,,15,,,,5,,,5,
-1210,Ring Pommel Saber,4,22300,11150,70,100,,15,,,,5,,,6,
+// rAthena-aligned item database
+// ID,Name,Type,Buy,Sell,Weight,ATK,DEF,Range,Slots
+501,Red Potion,0,50,25,7,,,,
+502,Orange Potion,0,200,100,7,,,,
+909,Jellopy,0,3,1,10,,,,
+1201,Knife,4,50,25,40,17,,15,4
+1205,Sword,4,100,50,50,25,,15,4
+1210,Ring Pommel Saber,4,22300,11150,70,100,,15,4
+2101,Wooden Shield,5,300,150,100,,3,,
+2301,Cotton Shirt,5,600,300,100,,10,,

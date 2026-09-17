@@ -36,6 +36,7 @@ string *epilog()
         "/std/loader/job_loader",
         "/std/loader/mob_loader",
         "/std/loader/skill_loader",
+        "/std/loader/drop_loader",
         "/std/system/game_lib",
         "/std/object/player",
         "/cmds/iteminfo"

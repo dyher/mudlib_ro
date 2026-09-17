@@ -1,0 +1,7 @@
+// rAthena-aligned drop database
+// Format: MobID,ItemID,Rate (10000 = 100%)
+1002,501,5000
+1002,909,7000
+1002,1201,5000
+1007,501,3000
+1007,2301,2000

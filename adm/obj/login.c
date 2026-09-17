@@ -57,6 +57,7 @@ void enter_game(string ch)
     player = call_other("/adm/obj/master", "create_player_for", ch);
     if (!player) { write("ERROR: Cannot create player.\n"); destruct(this_object()); return; }
     player->restore();
+    debug_message("[login] restore done, base_level=" + player->query("base_level") + " skills=" + sizeof(player->query("skills") || ([])) + "\n");
     write("\nWelcome, " + ch + "!\n");
     game_prompt();
 }
@@ -86,8 +87,12 @@ void game_input(string line)
     else if (cmd == "stat") player->allocate_stat(arg);
     else if (cmd == "stats") player->show_stats();
     else if (cmd == "skills") player->list_skills();
+    else if (cmd == "inv" || cmd == "inventory" || cmd == "i") player->list_inventory();
+    else if (cmd == "equip") player->equip_item(arg);
+    else if (cmd == "unequip") player->unequip_slot(arg);
+    else if (cmd == "use") player->use_item(arg);
     else if (cmd == "learn") player->learn_skill(arg);
-    else if (cmd == "cast" || cmd == "use") {
+    else if (cmd == "cast") {
         string sk, tgt;
         int s2 = strsrch(arg, " ");
         if (s2 == -1) { sk = arg; tgt = ""; }

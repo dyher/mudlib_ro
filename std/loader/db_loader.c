@@ -1,73 +1,44 @@
-// db_loader.c — rAthena item_db.txt loader
-// Reads rAthena CSV format and provides query interface
+// std/loader/db_loader.c — rAthena item_db.txt loader
 
 private mapping item_db = ([]);
 
-// rAthena item_db.txt format:
-// ID,Name,Type,Buy,Sell,Weight,ATK,DEF,Range,Slots,Job,Upper,Gender,Loc,wLV,eLV,View,Script
-
 void load_item_db(string path)
 {
-    string content;
-    string *lines;
+    string content, *lines;
     int i;
-    
     content = read_file(path);
-    if (!content) {
-        debug_message("db_loader: failed to read " + path + "\n");
-        return;
-    }
-    
+    if (!content) return;
     lines = explode(content, "\n");
-    
     for (i = 0; i < sizeof(lines); i++) {
-        string line = lines[i];
-        string *fields;
+        string line = lines[i], *f;
         int id;
-        
-        // Skip comments and empty lines
         if (line == "" || line[0..1] == "//") continue;
-        
-        // Parse CSV (simplified - doesn't handle quoted fields with commas)
-        fields = explode(line, ",");
-        
-        if (sizeof(fields) < 10) continue;
-        
-        id = to_int(fields[0]);
-        
+        f = explode(line, ",");
+        if (sizeof(f) < 10) continue;
+        id = to_int(f[0]);
         item_db[id] = ([
-            "id": id,
-            "name": fields[1],
-            "type": to_int(fields[2]),
-            "buy": to_int(fields[3]),
-            "sell": to_int(fields[4]),
-            "weight": to_int(fields[5]),
-            "atk": to_int(fields[6]),
-            "def": fields[7] != "" ? to_int(fields[7]) : 0,
-            "range": to_int(fields[8]),
-            "slots": to_int(fields[9])
+            "id": id, "name": f[1], "type": to_int(f[2]),
+            "buy": to_int(f[3]), "sell": to_int(f[4]), "weight": to_int(f[5]),
+            "atk": f[6] != "" ? to_int(f[6]) : 0,
+            "def": f[7] != "" ? to_int(f[7]) : 0,
+            "range": to_int(f[8]), "slots": to_int(f[9])
         ]);
     }
-    
-    debug_message("db_loader: loaded " + sizeof(item_db) + " items from " + path + "\n");
+    debug_message("db_loader: loaded " + sizeof(item_db) + " items\n");
 }
 
-mapping query_item(int id)
+mapping query_item(int id) { return item_db[id]; }
+mapping query_all_items() { return item_db; }
+int query_item_count() { return sizeof(item_db); }
+
+mapping query_item_by_name(string name)
 {
-    return item_db[id];
+    int *ids, i;
+    string key = lower_case(name);
+    ids = keys(item_db);
+    for (i = 0; i < sizeof(ids); i++)
+        if (lower_case(item_db[ids[i]]["name"]) == key) return item_db[ids[i]];
+    return 0;
 }
 
-mapping query_all_items()
-{
-    return item_db;
-}
-
-int query_item_count()
-{
-    return sizeof(item_db);
-}
-
-void create()
-{
-    load_item_db("/db/sample/item_db.txt");
-}
+void create() { load_item_db("/db/sample/item_db.txt"); }
