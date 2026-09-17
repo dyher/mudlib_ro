@@ -24,6 +24,12 @@ object load_room(string path)
     return load_object(path);
 }
 
+// Load an NPC object (master has Root euid)
+object load_npc(string path)
+{
+    return load_object(path);
+}
+
 object create_player_for(string char_name)
 {
     object p = new("/std/object/player");

@@ -514,6 +514,17 @@ void look_room()
         for (i = 0; i < sizeof(dirs); i++) write(" " + dirs[i]);
         write("\n");
     }
+    if (room) {
+        mapping npcs = room->query("npcs");
+        if (mapp(npcs) && sizeof(npcs) > 0) {
+            string *nnames = keys(npcs);
+            string nlist = "";
+            int k;
+            for (k = 0; k < sizeof(nnames); k++)
+                nlist += (nlist == "" ? "" : ", ") + nnames[k];
+            write("NPCs: " + nlist + "\n");
+        }
+    }
     if (room && !room->query("no_combat")) {
         int *mobs = room->query("mobs");
         if (pointerp(mobs) && sizeof(mobs) > 0) {
@@ -547,4 +558,22 @@ void move_player(string direction)
     move_object(dest);
     write("\n");
     look_room();
+}
+
+void talk_npc(string name)
+{
+    object room = environment(this_object());
+    object npc;
+    mapping npcs;
+    string npc_path;
+    if (!room) { write("You are nowhere.\n"); return; }
+    npcs = room->query("npcs");
+    if (!mapp(npcs) || !npcs[lower_case(name)]) {
+        write("There is no " + name + " here.\n");
+        return;
+    }
+    npc_path = npcs[lower_case(name)];
+    npc = call_other("/adm/obj/master", "load_npc", npc_path);
+    if (!npc) { write("You can't talk to " + name + ".\n"); return; }
+    npc->on_talk(this_object());
 }

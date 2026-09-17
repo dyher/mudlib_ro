@@ -90,6 +90,7 @@ void game_input(string line)
     else if (cmd == "south" || cmd == "s") player->move_player("south");
     else if (cmd == "east" || cmd == "e") player->move_player("east");
     else if (cmd == "west" || cmd == "w") player->move_player("west");
+    else if (cmd == "talk" || cmd == "t") player->talk_npc(arg);
     else if (cmd == "jobs") player->list_jobs();
     else if (cmd == "job") player->choose_job(to_int(arg));
     else if (cmd == "monsters" || cmd == "mobs") player->list_mobs();
