@@ -17,11 +17,23 @@ object connect(int port)
     return login_ob;
 }
 
+// Master has Root euid, so it can create objects on behalf of login
+object create_player_for(string char_name)
+{
+    object p = new("/std/object/player");
+    if (p) p->setup(char_name);
+    return p;
+}
+
+
 // Driver calls epilog() at boot to get list of objects to preload
 string *epilog()
 {
     return ({
+        "/std/system/storage",
+        "/std/system/accountd",
         "/std/loader/db_loader",
+        "/std/object/player",
         "/cmds/iteminfo"
     });
 }
