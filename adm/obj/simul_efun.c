@@ -41,3 +41,18 @@ void assure_file(string file) {
         mkdir(current);
     }
 }
+
+// lower_case: convert string to lowercase
+string lower_case(string str) {
+    int i, n, c;
+    string r;
+    if (!stringp(str)) return str;
+    n = strlen(str);
+    r = "";
+    for (i = 0; i < n; i++) {
+        c = str[i];
+        if (c >= 'A' && c <= 'Z') c += 32;
+        r += sprintf("%c", c);
+    }
+    return r;
+}

@@ -34,6 +34,7 @@ string *epilog()
         "/std/system/accountd",
         "/std/loader/db_loader",
         "/std/loader/job_loader",
+        "/std/loader/mob_loader",
         "/std/object/player",
         "/cmds/iteminfo"
     });

@@ -85,12 +85,15 @@ void game_input(string line)
 
     if (cmd == "look") { write("You are in Prontera Square. (placeholder)\n"); }
     else if (cmd == "jobs") { player->list_jobs(); }
+    else if (cmd == "monsters" || cmd == "mobs") { player->list_mobs(); }
+    else if (cmd == "kill" || cmd == "attack") { player->kill_mob(arg); }
+    else if (cmd == "rest") { player->do_rest(); }
     else if (cmd == "job") { player->choose_job(to_int(arg)); }
     else if (cmd == "stats") { player->show_stats(); }
     else if (cmd == "save") { player->save(); write("Saved.\n"); }
     else if (cmd == "iteminfo") { call_other("/cmds/iteminfo", "main", arg); }
     else if (cmd == "quit") { player->save(); write("Bye!\n"); destruct(this_object()); return; }
-    else { write("Huh? (try: jobs/job/stats/save/iteminfo/quit)\n"); }
+    else { write("Huh? (jobs/job/monsters/kill/rest/stats/save/quit)\n"); }
 
     game_prompt();
 }
