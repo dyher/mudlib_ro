@@ -18,6 +18,12 @@ object connect(int port)
 }
 
 // Master has Root euid, so it can create objects on behalf of login
+// Load a room/map object (master has Root euid)
+object load_room(string path)
+{
+    return load_object(path);
+}
+
 object create_player_for(string char_name)
 {
     object p = new("/std/object/player");

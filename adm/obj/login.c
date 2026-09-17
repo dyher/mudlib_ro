@@ -59,6 +59,12 @@ void enter_game(string ch)
     player->restore();
     debug_message("[login] restore done, base_level=" + player->query("base_level") + " skills=" + sizeof(player->query("skills") || ([])) + "\n");
     write("\nWelcome, " + ch + "!\n");
+    {
+        object start_room = call_other("/adm/obj/master", "load_room", "/d/world/prontera");
+        if (start_room) player->move_to_room(start_room);
+    }
+    write("\n");
+    player->look_room();
     game_prompt();
 }
 
@@ -78,7 +84,12 @@ void game_input(string line)
     if (sp == -1) { cmd = line; arg = ""; }
     else { cmd = line[0..sp-1]; arg = line[sp+1..]; }
 
-    if (cmd == "look") write("You are in Prontera Square. (placeholder)\n");
+    if (cmd == "look" || cmd == "l") player->look_room();
+    else if (cmd == "move" || cmd == "go") player->move_player(arg);
+    else if (cmd == "north" || cmd == "n") player->move_player("north");
+    else if (cmd == "south" || cmd == "s") player->move_player("south");
+    else if (cmd == "east" || cmd == "e") player->move_player("east");
+    else if (cmd == "west" || cmd == "w") player->move_player("west");
     else if (cmd == "jobs") player->list_jobs();
     else if (cmd == "job") player->choose_job(to_int(arg));
     else if (cmd == "monsters" || cmd == "mobs") player->list_mobs();

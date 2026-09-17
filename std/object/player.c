@@ -119,8 +119,13 @@ int calc_def()
 
 void kill_mob(string name)
 {
+    object room = environment(this_object());
     object ML = find_object("/std/loader/mob_loader");
     mapping mob;
+    if (room && room->query("no_combat")) {
+        write("You can't fight in this safe area.\n");
+        return;
+    }
     int mob_hp, p_hp, p_atk, p_def, rounds;
     if (!ML) { write("Monster system unavailable.\n"); return; }
     mob = ML->query_mob_by_name(name);
@@ -478,4 +483,48 @@ void list_mobs()
         write("  " + m["name"] + " (Lv." + m["level"] + ", HP:" + m["hp"] + ", EXP:" + m["base_exp"] + ")\n");
     }
     write("Use: kill <name>\n");
+}
+
+// ===== Map / Movement =====
+void move_to_room(object room)
+{
+    if (room) move_object(room);
+}
+
+void look_room()
+{
+    object room = environment(this_object());
+    mapping exits;
+    string *dirs;
+    int i;
+    if (!room) { write("You are floating in the void.\n"); return; }
+    write("[" + room->query("short") + "]\n");
+    write(room->query("long") + "\n");
+    exits = room->query("exits");
+    if (mapp(exits)) {
+        dirs = keys(exits);
+        write("Exits:");
+        for (i = 0; i < sizeof(dirs); i++) write(" " + dirs[i]);
+        write("\n");
+    }
+}
+
+void move_player(string direction)
+{
+    object room = environment(this_object());
+    object dest;
+    mapping exits;
+    string dest_path;
+    if (!room) { write("You are nowhere.\n"); return; }
+    exits = room->query("exits");
+    if (!mapp(exits) || !exits[direction]) {
+        write("You can't go " + direction + ".\n");
+        return;
+    }
+    dest_path = exits[direction];
+    dest = call_other("/adm/obj/master", "load_room", dest_path);
+    if (!dest) { write("You can't go there.\n"); return; }
+    move_object(dest);
+    write("\n");
+    look_room();
 }
