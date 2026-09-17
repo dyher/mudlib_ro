@@ -1,0 +1,20 @@
+
+
+varargs void init_damage(int, int, int, int, mixed...);
+
+void
+setup_dagger(int x, int y, int z, int r)
+{
+    if( x < 1 || x > 3 )
+        error("damage multiplier out of range.\n");
+    if( y < 1 || y > 20 )
+        error("damage range out of range.\n");
+    if( z < 1 || z > 100 )
+        error("damage strength bonus out of range.\n");
+    if( r < -x || r > 15 )
+        error("damage roll out of range.\n");
+
+    init_damage(x, y, z, r, "dagger");
+    init_damage(x, y, z, r, "secondhand dagger");
+}
+

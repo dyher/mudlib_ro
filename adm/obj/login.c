@@ -8,25 +8,19 @@ void game_input(string line);
 object player;
 string acc_name;
 
-object A() {
-    object acc = find_object("/std/system/accountd");
-    if (!acc) debug_message("[login] accountd NOT FOUND!\n");
-    return acc;
-}
+object A() { return find_object("/std/system/accountd"); }
 
 void logon()
 {
-    debug_message("[login] logon() called\n");
-    write("\n== Neolith RO ==\n");
+    write("\n== Neolith RO (ES2 Architecture) ==\n");
     write("Account: ");
     input_to("get_account");
 }
 
 void get_account(string line)
 {
-    debug_message("[login] get_account: " + line + "\n");
     if (!line || line == "") { write("Account: "); input_to("get_account"); return; }
-    acc_name = line;  // lower_case removed for compat
+    acc_name = line;
     if (A()->exists_account(acc_name)) {
         write("Password: ");
         input_to("get_password");
@@ -38,7 +32,6 @@ void get_account(string line)
 
 void new_password(string line)
 {
-    debug_message("[login] new_password\n");
     if (!line || line == "") { write("Password: "); input_to("new_password"); return; }
     A()->create_account(acc_name, line);
     write("Create character name: ");
@@ -48,7 +41,6 @@ void new_password(string line)
 void get_password(string line)
 {
     string ch;
-    debug_message("[login] get_password\n");
     if (!A()->check_account(acc_name, line)) {
         write("Wrong password.\nAccount: ");
         input_to("get_account");
@@ -61,7 +53,6 @@ void get_password(string line)
 
 void new_char(string line)
 {
-    debug_message("[login] new_char: " + line + "\n");
     if (!line || line == "") { write("Character name: "); input_to("new_char"); return; }
     A()->set_char(acc_name, line);
     enter_game(line);
@@ -69,23 +60,19 @@ void new_char(string line)
 
 void enter_game(string ch)
 {
-    debug_message("[login] enter_game: " + ch + "\n");
     player = call_other("/adm/obj/master", "create_player_for", ch);
     if (!player) {
-        debug_message("[login] ERROR: master->create_player_for() failed!\n");
         write("ERROR: Cannot create player object.\n");
         destruct(this_object());
         return;
     }
-    debug_message("[login] player created: " + sprintf("%O", player) + "\n");
-    player->restore();
+    player->restore();  // ES2 save.c restore
     write("\nWelcome, " + ch + "!\n");
     game_prompt();
 }
 
 void game_prompt()
 {
-    debug_message("[login] game_prompt\n");
     write("> ");
     input_to("game_input");
 }
@@ -93,11 +80,10 @@ void game_prompt()
 void game_input(string line)
 {
     string cmd, arg;
-    debug_message("[login] game_input: " + line + "\n");
     if (!line || line == "") { game_prompt(); return; }
     if (sscanf(line, "%s %s", cmd, arg) != 2) { cmd = line; arg = ""; }
 
-    if (cmd == "look") { player->look(); }
+    if (cmd == "look") { write("You are in Prontera Square. (placeholder)\n"); }
     else if (cmd == "stats") { player->show_stats(); }
     else if (cmd == "save") { player->save(); write("Saved.\n"); }
     else if (cmd == "iteminfo") { call_other("/cmds/iteminfo", "main", arg); }
