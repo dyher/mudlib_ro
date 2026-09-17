@@ -49,6 +49,7 @@ void setup(string n)
     set("skills", ([]));
     set("inventory", ([]));
     set("equipped", ([]));
+    set("zeny", 500);
     choose_job(0);   // start as Novice
 }
 
@@ -157,8 +158,13 @@ void kill_mob(string name)
         rounds++;
     }
     if (mob_hp <= 0) {
+        int z = mob["zeny_min"] + random(mob["zeny_max"] - mob["zeny_min"] + 1);
         write("You defeated the " + mob["name"] + "!\n");
         gain_exp(mob["base_exp"], mob["job_exp"]);
+        if (z > 0) {
+            find_object("/std/system/game_lib")->apply_zeny(this_object(), z);
+            write("  You got " + z + " Zeny.\n");
+        }
         loot_mob(mob["id"]);
     } else {
         write("You were defeated!\n");
@@ -300,6 +306,108 @@ void use_item(string name)
     write("You used " + item["name"] + " and recovered " + heal + " HP.\n");
 }
 
+// ===== Shop / Zeny =====
+void list_shop(string shop_key)
+{
+    object SP = find_object("/std/loader/shop_loader");
+    object DL = find_object("/std/loader/db_loader");
+    mapping *items;
+    int i;
+    if (!SP) { write("Shop system unavailable.\n"); return; }
+    items = SP->query_shop(shop_key);
+    if (!pointerp(items) || sizeof(items) == 0) { write("Nothing to sell here.\n"); return; }
+    write("=== " + capitalize(shop_key) + " Shop ===\n");
+    write("Your Zeny: " + query("zeny") + "z\n");
+    for (i = 0; i < sizeof(items); i++) {
+        mapping s_item = items[i];
+        mapping item = DL->query_item(s_item["item_id"]);
+        int price = s_item["price"] ? s_item["price"] : (item ? item["buy"] : 0);
+        if (item)
+            write("  " + item["name"] + " - " + price + "z\n");
+    }
+    write("Use: buy <item> [amount], sell <item> [amount]\n");
+}
+
+// 解析 "物品名 [數量]" -> ({ name, amount })，從右往左找最後的數字
+mixed *parse_item_arg(string arg)
+{
+    string name, tail;
+    int amount = 1;
+    int sp, i, allnum;
+    if (!arg || arg == "") return ({ "", 1 });
+    name = arg;
+    sp = -1;
+    for (i = strlen(arg) - 1; i >= 0; i--) {
+        if (arg[i] == ' ') { sp = i; break; }
+    }
+    if (sp > 0) {
+        tail = arg[sp+1..];
+        allnum = (strlen(tail) > 0);
+        for (i = 0; i < strlen(tail); i++) {
+            if (tail[i] < '0' || tail[i] > '9') { allnum = 0; break; }
+        }
+        if (allnum) {
+            amount = to_int(tail);
+            name = arg[0..sp-1];
+        }
+    }
+    if (amount < 1) amount = 1;
+    return ({ name, amount });
+}
+
+void buy_item(string arg)
+{
+    object SP = find_object("/std/loader/shop_loader");
+    object DL = find_object("/std/loader/db_loader");
+    object GL = find_object("/std/system/game_lib");
+    mixed *pa = parse_item_arg(arg);
+    string name = pa[0];
+    int amount = pa[1];
+    mapping *items;
+    mapping item;
+    int price, total, i;
+    items = SP->query_shop("merchant");
+    if (!pointerp(items)) { write("Shop unavailable.\n"); return; }
+    item = DL->query_item_by_name(name);
+    if (!item) { write("No such item: " + name + "\n"); return; }
+    price = item["buy"];
+    for (i = 0; i < sizeof(items); i++) {
+        if (items[i]["item_id"] == item["id"]) {
+            if (items[i]["price"]) price = items[i]["price"];
+            break;
+        }
+    }
+    total = price * amount;
+    if (!GL->can_pay(this_object(), total)) {
+        write("Not enough Zeny (need " + total + "z, have " + GL->query_zeny(this_object()) + "z).\n");
+        return;
+    }
+    GL->apply_zeny(this_object(), -total);
+    add_item(item["id"], amount);
+    write("Bought " + amount + "x " + item["name"] + " for " + total + "z.\n");
+}
+
+void sell_item(string arg)
+{
+    object DL = find_object("/std/loader/db_loader");
+    object GL = find_object("/std/system/game_lib");
+    mixed *pa = parse_item_arg(arg);
+    string name = pa[0];
+    int amount = pa[1];
+    mapping item;
+    int price, total;
+    item = DL->query_item_by_name(name);
+    if (!item) { write("No such item: " + name + "\n"); return; }
+    if (query_item_amount(item["id"]) < amount) {
+        write("You don't have that many.\n"); return;
+    }
+    price = item["sell"];
+    total = price * amount;
+    remove_item(item["id"], amount);
+    GL->apply_zeny(this_object(), total);
+    write("Sold " + amount + "x " + item["name"] + " for " + total + "z.\n");
+}
+
 // ===== Skills =====
 int has_skill(int id)
 {
@@ -377,8 +485,13 @@ void skill_attack_mob(mapping sk, string target)
         rounds++;
     }
     if (mob_hp <= 0) {
+        int z = mob["zeny_min"] + random(mob["zeny_max"] - mob["zeny_min"] + 1);
         write("You defeated the " + mob["name"] + "!\n");
         gain_exp(mob["base_exp"], mob["job_exp"]);
+        if (z > 0) {
+            find_object("/std/system/game_lib")->apply_zeny(this_object(), z);
+            write("  You got " + z + " Zeny.\n");
+        }
     } else {
         write("You were defeated!\n");
         p_hp = query("max_hp") / 10;

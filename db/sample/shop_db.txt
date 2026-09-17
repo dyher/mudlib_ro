@@ -1,0 +1,6 @@
+// rAthena-aligned shop database
+// Format: ShopKey, ItemID, Price (0 = use item_db buy price)
+merchant, 501, 50
+merchant, 502, 200
+merchant, 1201, 50
+merchant, 1205, 100

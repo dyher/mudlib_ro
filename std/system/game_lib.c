@@ -30,3 +30,25 @@ void apply_sp(object target, int amount)
     if (sp > max) sp = max;
     target->set("sp", sp);
 }
+
+void apply_zeny(object target, int amount)
+{
+    int z;
+    if (!target) return;
+    z = target->query("zeny");
+    if (undefinedp(z)) z = 0;
+    z += amount;
+    if (z < 0) z = 0;
+    target->set("zeny", z);
+}
+
+int query_zeny(object target)
+{
+    int z = target->query("zeny");
+    return undefinedp(z) ? 0 : z;
+}
+
+int can_pay(object target, int amount)
+{
+    return query_zeny(target) >= amount;
+}
