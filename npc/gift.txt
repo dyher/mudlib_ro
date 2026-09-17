@@ -1,0 +1,9 @@
+// rAthena-format NPC script
+prontera,152,180,3	script	Gift Giver	100,{
+	mes "[Gift Giver]";
+	mes "Welcome to Prontera, traveler!";
+	mes "Please accept these gifts.";
+	getitem 501,2;
+	getitem 909,1;
+	close;
+}

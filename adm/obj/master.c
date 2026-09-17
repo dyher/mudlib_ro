@@ -51,6 +51,7 @@ string *epilog()
         "/std/loader/drop_loader",
         "/std/loader/shop_loader",
         "/std/system/game_lib",
+        "/std/system/npcscript",
         "/std/object/player",
         "/cmds/iteminfo"
     });
