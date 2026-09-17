@@ -1,9 +1,21 @@
 // std/system/npcscript.c — rAthena NPC script interpreter (stateful)
-// Supports: mes, next, close, menu/select, goto, getitem, heal, zeny
-// Dialog state lives in the player temp dbase; pauses via waiting flag.
+// mes, next, close, menu/select, goto, if(countitem), getitem, delitem, heal, zeny
 
 private string trim(string s);
 private string unquote(string s);
+private string strip_spaces(string s);
+private int eval_operand(object player, string s);
+private int eval_condition(object player, string cond);
+private int do_mes(object player, string args);
+private int do_next(object player);
+private int do_close(object player);
+private int do_menu(object player, string args);
+private int do_goto(object player, string args);
+private int do_if(object player, string args);
+private int do_getitem(object player, string args);
+private int do_delitem(object player, string args);
+private int do_heal(object player, string args);
+private int do_zeny(object player, string args);
 private void exec_loop(object player);
 private int exec_line(object player, string line);
 private void clear_state(object player);
@@ -28,6 +40,48 @@ private string unquote(string s)
     return s;
 }
 
+private string strip_spaces(string s)
+{
+    string r = "";
+    int i;
+    for (i = 0; i < strlen(s); i++) {
+        if (s[i] != 32) r += s[i..i];
+    }
+    return r;
+}
+
+private int eval_operand(object player, string s)
+{
+    int n;
+    s = trim(s);
+    if (sscanf(s, "countitem(%d)", n) == 1)
+        return player->query_item_amount(n);
+    return to_int(s);
+}
+
+private int eval_condition(object player, string cond)
+{
+    string op = "", lhs, rhs;
+    int p, lval, rval;
+    cond = strip_spaces(cond);
+    if ((p = strsrch(cond, ">=")) != -1)      { op = ">="; lhs = cond[0..p-1]; rhs = cond[p+2..]; }
+    else if ((p = strsrch(cond, "<=")) != -1) { op = "<="; lhs = cond[0..p-1]; rhs = cond[p+2..]; }
+    else if ((p = strsrch(cond, "==")) != -1) { op = "=="; lhs = cond[0..p-1]; rhs = cond[p+2..]; }
+    else if ((p = strsrch(cond, "!=")) != -1) { op = "!="; lhs = cond[0..p-1]; rhs = cond[p+2..]; }
+    else if ((p = strsrch(cond, ">")) != -1)  { op = ">";  lhs = cond[0..p-1]; rhs = cond[p+1..]; }
+    else if ((p = strsrch(cond, "<")) != -1)  { op = "<";  lhs = cond[0..p-1]; rhs = cond[p+1..]; }
+    else return 0;
+    lval = eval_operand(player, lhs);
+    rval = eval_operand(player, rhs);
+    if (op == ">=") return lval >= rval;
+    if (op == "<=") return lval <= rval;
+    if (op == "==") return lval == rval;
+    if (op == "!=") return lval != rval;
+    if (op == ">")  return lval > rval;
+    if (op == "<")  return lval < rval;
+    return 0;
+}
+
 int in_dialog(object player)
 {
     mapping st = player->query_temp("npc_script");
@@ -37,6 +91,120 @@ int in_dialog(object player)
 private void clear_state(object player)
 {
     player->delete_temp("npc_script");
+}
+
+private int do_mes(object player, string args)
+{
+    write(unquote(args) + "\n");
+    return 0;
+}
+
+private int do_next(object player)
+{
+    mapping st = player->query_temp("npc_script");
+    st["waiting"] = 1;
+    player->set_temp("npc_script", st);
+    write(">> (press enter)\n");
+    return 1;
+}
+
+private int do_close(object player)
+{
+    return 2;
+}
+
+private int do_menu(object player, string args)
+{
+    string *parts = explode(args, ",");
+    string *menu_labels = ({});
+    mapping st;
+    int i;
+    write("\n");
+    for (i = 0; i + 1 < sizeof(parts); i += 2) {
+        string text = unquote(trim(parts[i]));
+        string label = trim(parts[i+1]);
+        menu_labels += ({ label });
+        write((i/2 + 1) + ". " + text + "\n");
+    }
+    write("Choose (1-" + sizeof(menu_labels) + "): ");
+    st = player->query_temp("npc_script");
+    st["waiting"] = 2;
+    st["menu_labels"] = menu_labels;
+    player->set_temp("npc_script", st);
+    return 1;
+}
+
+private int do_goto(object player, string args)
+{
+    string label = trim(args);
+    mapping st = player->query_temp("npc_script");
+    if (!undefinedp(st["labels"][label])) {
+        st["pc"] = st["labels"][label];
+        player->set_temp("npc_script", st);
+    }
+    return 0;
+}
+
+private int do_if(object player, string args)
+{
+    int last_p = -1, j;
+    string cond, action, label;
+    for (j = strlen(args)-1; j >= 0; j--) {
+        if (args[j] == 41) { last_p = j; break; }
+    }
+    if (last_p > 0) {
+        cond = args[1..last_p-1];
+        action = trim(args[last_p+1..]);
+        if (eval_condition(player, cond)) {
+            if (sscanf(action, "goto %s", label) == 1) {
+                mapping st = player->query_temp("npc_script");
+                if (!undefinedp(st["labels"][label])) {
+                    st["pc"] = st["labels"][label];
+                    player->set_temp("npc_script", st);
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+private int do_getitem(object player, string args)
+{
+    string *parts = explode(args, ",");
+    int id = to_int(parts[0]);
+    int amount = (sizeof(parts) > 1) ? to_int(parts[1]) : 1;
+    object DL = find_object("/std/loader/db_loader");
+    mapping item = DL->query_item(id);
+    player->add_item(id, amount);
+    if (item) write("You received " + amount + "x " + item["name"] + ".\n");
+    return 0;
+}
+
+private int do_delitem(object player, string args)
+{
+    string *parts = explode(args, ",");
+    int id = to_int(parts[0]);
+    int amount = (sizeof(parts) > 1) ? to_int(parts[1]) : 1;
+    player->remove_item(id, amount);
+    return 0;
+}
+
+private int do_heal(object player, string args)
+{
+    string *parts = explode(args, ",");
+    int hp = to_int(parts[0]);
+    int sp = (sizeof(parts) > 1) ? to_int(parts[1]) : 0;
+    object GL = find_object("/std/system/game_lib");
+    if (hp > 0) GL->apply_heal(player, hp);
+    if (sp > 0) GL->apply_sp(player, sp);
+    write("You feel refreshed.\n");
+    return 0;
+}
+
+private int do_zeny(object player, string args)
+{
+    find_object("/std/system/game_lib")->apply_zeny(player, to_int(args));
+    return 0;
 }
 
 void run_script(object player, string path)
@@ -119,7 +287,7 @@ private void exec_loop(object player)
     }
 }
 
-/* returns 0=continue, 1=pause(waiting), 2=end */
+/* returns 0=continue, 1=pause, 2=end */
 private int exec_line(object player, string line)
 {
     string cmd, args;
@@ -128,66 +296,15 @@ private int exec_line(object player, string line)
     if (sscanf(line, "%s %s", cmd, args) != 2) { cmd = line; args = ""; }
     cmd = lower_case(cmd);
 
-    if (cmd == "mes") {
-        write(unquote(args) + "\n");
-        return 0;
-    } else if (cmd == "next") {
-        mapping st = player->query_temp("npc_script");
-        st["waiting"] = 1;
-        player->set_temp("npc_script", st);
-        write(">> (press enter)\n");
-        return 1;
-    } else if (cmd == "close") {
-        return 2;
-    } else if (cmd == "menu" || cmd == "select") {
-        string *parts = explode(args, ",");
-        string *menu_labels = ({});
-        mapping st;
-        int i;
-        write("\n");
-        for (i = 0; i + 1 < sizeof(parts); i += 2) {
-            string text = unquote(trim(parts[i]));
-            string label = trim(parts[i+1]);
-            menu_labels += ({ label });
-            write((i/2 + 1) + ". " + text + "\n");
-        }
-        write("Choose (1-" + sizeof(menu_labels) + "): ");
-        st = player->query_temp("npc_script");
-        st["waiting"] = 2;
-        st["menu_labels"] = menu_labels;
-        player->set_temp("npc_script", st);
-        return 1;
-    } else if (cmd == "goto") {
-        string label = trim(args);
-        mapping st = player->query_temp("npc_script");
-        if (!undefinedp(st["labels"][label])) {
-            st["pc"] = st["labels"][label];
-            player->set_temp("npc_script", st);
-        } else {
-            write("(script error: unknown label " + label + ")\n");
-        }
-        return 0;
-    } else if (cmd == "getitem") {
-        string *parts = explode(args, ",");
-        int id = to_int(parts[0]);
-        int amount = (sizeof(parts) > 1) ? to_int(parts[1]) : 1;
-        object DL = find_object("/std/loader/db_loader");
-        mapping item = DL->query_item(id);
-        player->add_item(id, amount);
-        if (item) write("You received " + amount + "x " + item["name"] + ".\n");
-        return 0;
-    } else if (cmd == "heal") {
-        string *parts = explode(args, ",");
-        int hp = to_int(parts[0]);
-        int sp = (sizeof(parts) > 1) ? to_int(parts[1]) : 0;
-        object GL = find_object("/std/system/game_lib");
-        if (hp > 0) GL->apply_heal(player, hp);
-        if (sp > 0) GL->apply_sp(player, sp);
-        write("You feel refreshed.\n");
-        return 0;
-    } else if (cmd == "zeny" || cmd == "getzeny") {
-        find_object("/std/system/game_lib")->apply_zeny(player, to_int(args));
-        return 0;
-    }
+    if (cmd == "mes") return do_mes(player, args);
+    else if (cmd == "next") return do_next(player);
+    else if (cmd == "close") return do_close(player);
+    else if (cmd == "menu" || cmd == "select") return do_menu(player, args);
+    else if (cmd == "goto") return do_goto(player, args);
+    else if (cmd == "if") return do_if(player, args);
+    else if (cmd == "getitem") return do_getitem(player, args);
+    else if (cmd == "delitem") return do_delitem(player, args);
+    else if (cmd == "heal") return do_heal(player, args);
+    else if (cmd == "zeny" || cmd == "getzeny") return do_zeny(player, args);
     return 0;
 }

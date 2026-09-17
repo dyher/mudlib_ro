@@ -1,0 +1,15 @@
+prontera,150,150	script	Collector	100,{
+	mes "[Collector]";
+	mes "I'm collecting Jellopy!";
+	mes "Bring me 3 Jellopy and I'll reward you.";
+	if (countitem(909) >= 3) goto ENOUGH;
+	mes "You don't have enough yet. Come back later!";
+	close;
+ENOUGH:
+	mes "Wonderful! Thank you so much!";
+	delitem 909,3;
+	getitem 501,2;
+	zeny 100;
+	mes "Here are 2 Red Potions and 100 Zeny for you!";
+	close;
+}
