@@ -33,6 +33,7 @@ string *epilog()
         "/std/system/storage",
         "/std/system/accountd",
         "/std/loader/db_loader",
+        "/std/loader/job_loader",
         "/std/object/player",
         "/cmds/iteminfo"
     });

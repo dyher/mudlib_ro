@@ -84,11 +84,13 @@ void game_input(string line)
     if (sscanf(line, "%s %s", cmd, arg) != 2) { cmd = line; arg = ""; }
 
     if (cmd == "look") { write("You are in Prontera Square. (placeholder)\n"); }
+    else if (cmd == "jobs") { player->list_jobs(); }
+    else if (cmd == "job") { player->choose_job(to_int(arg)); }
     else if (cmd == "stats") { player->show_stats(); }
     else if (cmd == "save") { player->save(); write("Saved.\n"); }
     else if (cmd == "iteminfo") { call_other("/cmds/iteminfo", "main", arg); }
     else if (cmd == "quit") { player->save(); write("Bye!\n"); destruct(this_object()); return; }
-    else { write("Huh? (try: look/stats/save/iteminfo/quit)\n"); }
+    else { write("Huh? (try: jobs/job/stats/save/iteminfo/quit)\n"); }
 
     game_prompt();
 }
