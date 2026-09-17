@@ -1,0 +1,17 @@
+prontera,150,150	script	Helper	100,{
+	mes "[Helper]";
+	mes "Welcome! What can I do for you?";
+	menu "Give me a potion",GIFT,"Heal me please",HEAL,"Just passing by",BYE;
+GIFT:
+	mes "Here, take this potion!";
+	getitem 501,1;
+	close;
+HEAL:
+	mes "Let me heal your wounds.";
+	heal 1000,1000;
+	mes "There, good as new!";
+	close;
+BYE:
+	mes "Safe travels, adventurer!";
+	close;
+}

@@ -79,6 +79,12 @@ void game_input(string line)
 {
     string cmd, arg;
     int sp;
+    object NS = find_object("/std/system/npcscript");
+    if (NS && NS->in_dialog(player)) {
+        NS->handle_input(player, line);
+        game_prompt();
+        return;
+    }
     if (!line || line == "") { game_prompt(); return; }
     sp = strsrch(line, " ");
     if (sp == -1) { cmd = line; arg = ""; }
