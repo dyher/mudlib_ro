@@ -17,9 +17,47 @@ private int do_delitem(object player, string args);
 private int do_heal(object player, string args);
 private int do_zeny(object player, string args);
 private int do_jobchange(object player, string args);
+private int do_set(object player, string args);
+private int do_input(object player, string args);
 private void exec_loop(object player);
 private int exec_line(object player, string line);
 private void clear_state(object player);
+private int do_set(object player, string args)
+{
+    string var_name, var_value;
+    mapping vars;
+    if (sscanf(args, "%s,%s", var_name, var_value) != 2) {
+        if (sscanf(args, "%s %s", var_name, var_value) != 2)
+            return 0;
+    }
+    var_name = trim(var_name);
+    var_value = trim(var_value);
+    if (strlen(var_name) > 1 && var_name[0..0] == "@")
+        var_name = var_name[1..];
+    vars = player->query("script_vars");
+    if (!mapp(vars)) vars = ([]);
+    vars[var_name] = to_int(var_value);
+    player->set("script_vars", vars);
+    return 0;
+}
+
+private int do_input(object player, string args)
+{
+    string var_name;
+    mapping st;
+    var_name = trim(args);
+    if (strlen(var_name) > 1 && var_name[0..0] == "@")
+        var_name = var_name[1..];
+    st = player->query_temp("npc_script");
+    if (mapp(st)) {
+        st["waiting"] = 3;
+        st["input_var"] = var_name;
+        player->set_temp("npc_script", st);
+    }
+    write(">> ");
+    return 1;
+}
+
 void run_script(object player, string path);
 void handle_input(object player, string line);
 int in_dialog(object player);
@@ -61,6 +99,12 @@ private int eval_operand(object player, string s)
     if (s == "joblvl") return to_int(player->query("job_level"));
     if (s == "jobid") return to_int(player->query("job"));
     if (s == "zeny") return to_int(player->query("zeny"));
+    if (strlen(s) > 1 && s[0..0] == "@") {
+        mapping vars = player->query("script_vars");
+        if (mapp(vars) && !undefinedp(vars[s[1..]]))
+            return to_int(vars[s[1..]]);
+        return 0;
+    }
     return to_int(s);
 }
 
@@ -265,6 +309,15 @@ void handle_input(object player, string line)
         st["waiting"] = 0;
         player->set_temp("npc_script", st);
         exec_loop(player);
+    } else if (st["waiting"] == 3) {
+        string var_name = st["input_var"];
+        mapping vars = player->query("script_vars");
+        if (!mapp(vars)) vars = ([]);
+        vars[var_name] = to_int(line);
+        player->set("script_vars", vars);
+        st["waiting"] = 0;
+        player->set_temp("npc_script", st);
+        exec_loop(player);
     } else if (st["waiting"] == 2) {
         int choice = to_int(line);
         string *opts = st["menu_labels"];
@@ -318,5 +371,7 @@ private int exec_line(object player, string line)
     else if (cmd == "heal") return do_heal(player, args);
     else if (cmd == "zeny" || cmd == "getzeny") return do_zeny(player, args);
     else if (cmd == "jobchange") return do_jobchange(player, args);
+    else if (cmd == "set") return do_set(player, args);
+    else if (cmd == "input") return do_input(player, args);
     return 0;
 }

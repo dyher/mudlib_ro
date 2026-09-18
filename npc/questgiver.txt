@@ -1,0 +1,30 @@
+prontera,160,180,3	script	Quest Giver	100,{
+	mes "[Quest Giver]";
+	if (@quest_done == 1) goto DONE;
+	if (@quest_active == 1) goto PROGRESS;
+	mes "I need 3 Jellopy for my research!";
+	mes "Will you help me?";
+	menu "Accept quest",ACCEPT,"Maybe later",DECLINE;
+ACCEPT:
+	set @quest_active, 1;
+	mes "Wonderful! Bring me 3 Jellopy.";
+	close;
+PROGRESS:
+	if (countitem(909) >= 3) goto TURN_IN;
+	mes "You still need more Jellopy.";
+	close;
+TURN_IN:
+	delitem 909,3;
+	set @quest_active, 0;
+	set @quest_done, 1;
+	mes "Perfect! Here's your reward!";
+	zeny 100;
+	getitem 501,2;
+	close;
+DECLINE:
+	mes "Come back if you change your mind.";
+	close;
+DONE:
+	mes "Thank you again for your help!";
+	close;
+}

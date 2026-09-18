@@ -7,5 +7,5 @@ void create()
     set("long", "The capital city of the Rune-Midgarts Kingdom. Peaceful and safe.");
     set("exits", ([ "north": "/d/world/prt_fild08" ]));
     set("no_combat", 1);
-    set("npcs", ([ "sister": "/obj/npc/healer", "gift": "/obj/npc/gift", "helper": "/obj/npc/helper", "job master": "/obj/npc/jobmaster", "collector": "/obj/npc/collector" ]));
+    set("npcs", ([ "sister": "/obj/npc/healer", "gift": "/obj/npc/gift", "helper": "/obj/npc/helper", "job master": "/obj/npc/jobmaster", "quest giver": "/obj/npc/questgiver", "collector": "/obj/npc/collector" ]));
 }
