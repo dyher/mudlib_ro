@@ -1,0 +1,38 @@
+prontera,155,180,3	script	Job Master	100,{
+	mes "[Job Master]";
+	mes "I can help you change your job!";
+	if (jobid != 0) goto NOT_NOVICE;
+	if (baselvl < 2) goto TOO_LOW;
+	mes "Choose your new job:";
+	menu "Swordsman",J1,"Mage",J2,"Archer",J3,"Acolyte",J4,"Merchant",J5,"Thief",J6;
+J1:
+	jobchange 1;
+	mes "You are now a Swordsman!";
+	close;
+J2:
+	jobchange 2;
+	mes "You are now a Mage!";
+	close;
+J3:
+	jobchange 3;
+	mes "You are now an Archer!";
+	close;
+J4:
+	jobchange 4;
+	mes "You are now an Acolyte!";
+	close;
+J5:
+	jobchange 5;
+	mes "You are now a Merchant!";
+	close;
+J6:
+	jobchange 6;
+	mes "You are now a Thief!";
+	close;
+NOT_NOVICE:
+	mes "You have already changed your job!";
+	close;
+TOO_LOW:
+	mes "You must be at least Base Level 2 to change jobs.";
+	close;
+}

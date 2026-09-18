@@ -16,6 +16,7 @@ private int do_getitem(object player, string args);
 private int do_delitem(object player, string args);
 private int do_heal(object player, string args);
 private int do_zeny(object player, string args);
+private int do_jobchange(object player, string args);
 private void exec_loop(object player);
 private int exec_line(object player, string line);
 private void clear_state(object player);
@@ -56,6 +57,10 @@ private int eval_operand(object player, string s)
     s = trim(s);
     if (sscanf(s, "countitem(%d)", n) == 1)
         return player->query_item_amount(n);
+    if (s == "baselvl") return to_int(player->query("base_level"));
+    if (s == "joblvl") return to_int(player->query("job_level"));
+    if (s == "jobid") return to_int(player->query("job"));
+    if (s == "zeny") return to_int(player->query("zeny"));
     return to_int(s);
 }
 
@@ -207,6 +212,12 @@ private int do_zeny(object player, string args)
     return 0;
 }
 
+private int do_jobchange(object player, string args)
+{
+    find_object("/std/system/game_lib")->change_job(player, to_int(args));
+    return 0;
+}
+
 void run_script(object player, string path)
 {
     string content, body;
@@ -306,5 +317,6 @@ private int exec_line(object player, string line)
     else if (cmd == "delitem") return do_delitem(player, args);
     else if (cmd == "heal") return do_heal(player, args);
     else if (cmd == "zeny" || cmd == "getzeny") return do_zeny(player, args);
+    else if (cmd == "jobchange") return do_jobchange(player, args);
     return 0;
 }

@@ -70,3 +70,9 @@ int get_elemental_multiplier(int atk_ele, int def_ele)
     if (atk_ele == 1 && def_ele == 2) return 75;  // 水 打 地
     return 100; // 無屬性或無關
 }
+
+/* 轉職：LPC 物件和 rAthena 腳本都透過這裡 */
+void change_job(object player, int job_id)
+{
+    player->choose_job(job_id);
+}
