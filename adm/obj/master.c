@@ -3,6 +3,11 @@
 string get_root_uid() { return "Root"; }
 string get_bb_uid()   { return "Backbone"; }
 
+string simul_efun_object()
+{
+    return "/adm/obj/simul_efun";
+}
+
 object connect(int port)
 {
     object login_ob;

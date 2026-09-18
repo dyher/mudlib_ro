@@ -56,3 +56,50 @@ string lower_case(string str) {
     }
     return r;
 }
+
+
+
+
+// message: ES2 standard message broadcasting simul_efun
+void message(string msg_class, string msg, mixed target, object avoid)
+{
+    object *targets;
+    object *inv;
+    object ob;
+    object login_obj;
+    int i;
+    
+    if (stringp(target)) {
+        ob = find_object(target);
+        if (ob) target = ob;
+        else return;
+    }
+    
+    if (objectp(target)) {
+        if (target->is_player()) {
+            if (target != avoid) {
+                login_obj = target->query("login_obj");
+                if (objectp(login_obj)) tell_object(login_obj, msg);
+                else tell_object(target, msg);
+            }
+        } else {
+            inv = all_inventory(target);
+            for (i = 0; i < sizeof(inv); i++) {
+                if (inv[i] != avoid && inv[i]->is_player()) {
+                    login_obj = inv[i]->query("login_obj");
+                    if (objectp(login_obj)) tell_object(login_obj, msg);
+                    else tell_object(inv[i], msg);
+                }
+            }
+        }
+    } else if (pointerp(target)) {
+        targets = target;
+        for (i = 0; i < sizeof(targets); i++) {
+            if (objectp(targets[i]) && targets[i] != avoid && targets[i]->is_player()) {
+                login_obj = targets[i]->query("login_obj");
+                if (objectp(login_obj)) tell_object(login_obj, msg);
+                else tell_object(targets[i], msg);
+            }
+        }
+    }
+}

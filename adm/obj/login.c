@@ -57,6 +57,7 @@ void enter_game(string ch)
     player = call_other("/adm/obj/master", "create_player_for", ch);
     if (!player) { write("ERROR: Cannot create player.\n"); destruct(this_object()); return; }
     player->restore();
+    player->set("login_obj", this_object());
     debug_message("[login] restore done, base_level=" + player->query("base_level") + " skills=" + sizeof(player->query("skills") || ([])) + "\n");
     write("\nWelcome, " + ch + "!\n");
     {
@@ -140,3 +141,5 @@ void game_input(string line)
 }
 
 void net_dead() { destruct(this_object()); }
+
+void receive_message(string msg) { write(msg); }
