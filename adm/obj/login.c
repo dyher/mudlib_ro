@@ -118,6 +118,14 @@ void game_input(string line)
     }
     else if (cmd == "save") { player->save(); write("Saved.\n"); }
     else if (cmd == "iteminfo") call_other("/cmds/iteminfo", "main", arg);
+    else if (cmd == "say" || cmd == "'") {
+        if (arg != "") player->say_to_room(arg);
+        else write("Say what?\n");
+    }
+    else if (cmd == "who") {
+        write("Players online: (single-player MUD for now)\n");
+        write("  " + player->name() + "\n");
+    }
     else if (cmd == "update") {
         object UP = find_object("/adm/obj/updater");
         if (!UP) UP = load_object("/adm/obj/updater");

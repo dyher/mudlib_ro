@@ -324,6 +324,36 @@ void use_item(string name)
     write("You used " + item["name"] + " and recovered " + heal + " HP.\n");
 }
 
+// ===== Multiplayer =====
+void say_to_room(string msg)
+{
+    object room = environment(this_object());
+    object *inv;
+    int i;
+    if (!room) return;
+    inv = all_inventory(room);
+    for (i = 0; i < sizeof(inv); i++) {
+        if (inv[i] != this_object() && inv[i]->is_player())
+            tell_object(inv[i], name() + " says: " + msg + "\n");
+    }
+    write("You say: " + msg + "\n");
+}
+
+string *list_players_in_room()
+{
+    object room = environment(this_object());
+    object *inv;
+    string *names = ({});
+    int i;
+    if (!room) return names;
+    inv = all_inventory(room);
+    for (i = 0; i < sizeof(inv); i++) {
+        if (inv[i] != this_object() && inv[i]->is_player())
+            names += ({ inv[i]->name() });
+    }
+    return names;
+}
+
 // ===== Shop / Zeny =====
 void list_shop(string shop_key)
 {
