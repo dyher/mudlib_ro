@@ -118,6 +118,13 @@ void game_input(string line)
     }
     else if (cmd == "save") { player->save(); write("Saved.\n"); }
     else if (cmd == "iteminfo") call_other("/cmds/iteminfo", "main", arg);
+    else if (cmd == "update") {
+        object UP = find_object("/adm/obj/updater");
+        if (!UP) UP = load_object("/adm/obj/updater");
+        if (arg == "data" || arg == "all") UP->reload_all_data();
+        else if (arg != "") UP->update_object(arg);
+        else write("Usage: update data | update <object_path>\n");
+    }
     else if (cmd == "quit") { player->save(); write("Bye!\n"); destruct(this_object()); return; }
     else write("Huh? (jobs/job/stat/skills/learn/cast/monsters/kill/rest/stats/save/quit)\n");
 
