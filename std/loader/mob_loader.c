@@ -21,7 +21,8 @@ void load_mob_db(string path)
             "level": to_int(f[2]), "hp": to_int(f[3]),
             "atk": to_int(f[4]), "def": to_int(f[5]),
             "base_exp": to_int(f[6]), "job_exp": to_int(f[7]),
-            "zeny_min": to_int(f[8]), "zeny_max": to_int(f[9])
+            "zeny_min": to_int(f[8]), "zeny_max": to_int(f[9]),
+            "hit": to_int(f[10]), "flee": to_int(f[11]), "element": to_int(f[12])
         ]);
     }
     debug_message("mob_loader: loaded " + sizeof(mob_db) + " mobs\n");

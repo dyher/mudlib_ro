@@ -52,3 +52,21 @@ int can_pay(object target, int amount)
 {
     return query_zeny(target) >= amount;
 }
+
+/* rAthena 元素相剋矩陣 (簡化版: 0=Neutral, 1=Water, 2=Earth, 3=Fire, 4=Wind)
+ * 回傳傷害百分比 (100 = 100%, 150 = 150%, 50 = 50%)
+ */
+int get_elemental_multiplier(int atk_ele, int def_ele)
+{
+    if (atk_ele == def_ele) return 50;          // 同屬性減半
+    if (atk_ele == 1 && def_ele == 3) return 150; // 水 克 火
+    if (atk_ele == 3 && def_ele == 4) return 150; // 火 克 風
+    if (atk_ele == 4 && def_ele == 2) return 150; // 風 克 地
+    if (atk_ele == 2 && def_ele == 1) return 150; // 地 克 水
+    // 反向被剋 (rAthena 中通常是 75% 或 50%，這裡簡化為 75%)
+    if (atk_ele == 3 && def_ele == 1) return 75;  // 火 打 水
+    if (atk_ele == 4 && def_ele == 3) return 75;  // 風 打 火
+    if (atk_ele == 2 && def_ele == 4) return 75;  // 地 打 風
+    if (atk_ele == 1 && def_ele == 2) return 75;  // 水 打 地
+    return 100; // 無屬性或無關
+}

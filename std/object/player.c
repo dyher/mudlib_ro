@@ -16,9 +16,12 @@ void gain_exp(int base, int job);
 void check_level_up();
 void kill_mob(string name);
 int allocate_stat(string stat);
+int calc_hit();
+int calc_flee();
+int calc_crit();
 int has_skill(int id);
 int learn_skill(string name);
-void cast_skill(string skillname, string target);
+void cast_skill(string arg);
 void skill_attack_mob(mapping sk, string target);
 void add_item(int id, int amount);
 int remove_item(int id, int amount);
@@ -116,6 +119,21 @@ int calc_atk()
 int calc_def()
 {
     return query_attr("vit") / 2 + query("base_level") + armor_def();
+}
+
+int calc_hit()
+{
+    return query_attr("dex") + query("base_level");
+}
+
+int calc_flee()
+{
+    return query_attr("agi") + query("base_level");
+}
+
+int calc_crit()
+{
+    return query_attr("luk") / 3 + 1;
 }
 
 void kill_mob(string name)
@@ -435,24 +453,34 @@ int learn_skill(string name)
     return 1;
 }
 
-void cast_skill(string skillname, string target)
+void cast_skill(string arg)
 {
     object SL = find_object("/std/loader/skill_loader");
     object GL = find_object("/std/system/game_lib");
     mapping sk;
-    if (!SL) { write("Skill system unavailable.\n"); return; }
-    sk = SL->query_skill_by_name(skillname);
-    if (!sk) { write("Unknown skill: " + skillname + "\n"); return; }
-    if (!has_skill(sk["id"])) { write("You haven't learned " + sk["name"] + ".\n"); return; }
-    if (query("sp", 1) < sk["sp_cost"]) { write("Not enough SP.\n"); return; }
+    mixed *found;
+    string tgt_name;
+    if (!arg || arg == "") { write("Cast what?
+"); return; }
+    if (!SL) { write("Skill system unavailable.
+"); return; }
+    found = SL->find_skill_in_string(arg);
+    if (!found) { write("Unknown skill: " + arg + "
+"); return; }
+    sk = SL->query_skill(found[0]);
+    tgt_name = found[1];
+    if (!has_skill(sk["id"])) { write("You haven't learned " + sk["name"] + ".
+"); return; }
+    if (query("sp", 1) < sk["sp_cost"]) { write("Not enough SP.
+"); return; }
     set("sp", query("sp", 1) - sk["sp_cost"]);
-
     if (sk["type"] == "heal") {
         int amount = sk["power"] + query_attr("int") * 4;
-        GL->apply_heal(this_object(), amount);   // ← 呼叫統一函數庫
-        write("You cast " + sk["name"] + " and recover " + amount + " HP.\n");
+        GL->apply_heal(this_object(), amount);
+        write("You cast " + sk["name"] + " and recover " + amount + " HP.
+");
     } else if (sk["type"] == "attack") {
-        skill_attack_mob(sk, target);
+        skill_attack_mob(sk, tgt_name);
     }
 }
 
@@ -466,7 +494,14 @@ void skill_attack_mob(mapping sk, string target)
     if (!mob) { write("No such monster: " + target + "\n"); return; }
 
     sk_dmg = calc_atk() * sk["power"] / 100;
-    write("You cast " + sk["name"] + " on " + mob["name"] + " for " + sk_dmg + " dmg!\n");
+    {
+        int ele_mult = find_object("/std/system/game_lib")->get_elemental_multiplier(sk["element"], mob["element"]);
+        sk_dmg = sk_dmg * ele_mult / 100;
+        write("You cast " + sk["name"] + " on " + mob["name"] + " [Ele" + mob["element"] + "] ");
+        if (ele_mult >= 150) write("(WEAKNESS! " + ele_mult + "%) ");
+        else if (ele_mult <= 75) write("(Resisted " + ele_mult + "%) ");
+        write("for " + sk_dmg + " dmg!\n");
+    }
     mob_hp = mob["hp"] - sk_dmg;
     p_hp = query("hp");
     rounds = 0;
@@ -567,7 +602,7 @@ void show_stats()
     write("Base EXP: " + query("base_exp") + "   Job EXP: " + query("job_exp") + "\n");
     write("Stat Points: " + query_stat_points() + "   Skills: " + (mapp(learned) ? sizeof(learned) : 0) + "\n");
     write("HP: " + query("hp") + "/" + query("max_hp") + "   SP: " + query("sp") + "/" + query("max_sp") + "\n");
-    write("ATK: " + calc_atk() + "   DEF: " + calc_def() + "\n");
+    write(sprintf("ATK: %d   DEF: %d   HIT: %d   FLEE: %d   CRIT: %d\n", calc_atk(), calc_def(), calc_hit(), calc_flee(), calc_crit()));
     write("\nAttributes (use 'stat <name>'):\n");
     write("STR: " + query_attr("str") + "  AGI: " + query_attr("agi") + "  VIT: " + query_attr("vit") + "\n");
     write("INT: " + query_attr("int") + "  DEX: " + query_attr("dex") + "  LUK: " + query_attr("luk") + "\n");

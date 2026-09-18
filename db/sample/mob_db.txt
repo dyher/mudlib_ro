@@ -1,9 +1,9 @@
 // rAthena-aligned mob database
-// Format: MobID,Name,Level,HP,ATK,DEF,BaseEXP,JobEXP,ZenyMin,ZenyMax
-1002,Poring,1,50,7,0,27,20,1,10
-1007,Fabre,2,63,12,0,31,23,2,15
-1008,Pupa,2,41,1,0,18,14,5,20
-1009,Condor,3,105,15,0,43,32,10,40
-1012,Roda Frog,4,120,18,0,52,38,15,50
-1004,Hornet,4,190,22,0,64,43,20,60
-1023,Orc Warrior,24,1400,180,10,850,600,200,500
+// MobID,Name,Level,HP,ATK,DEF,BaseEXP,JobEXP,ZenyMin,ZenyMax,HIT,FLEE,Element
+1002,Poring,1,50,7,0,27,20,1,10,55,45,1
+1007,Fabre,2,63,12,0,31,23,2,15,60,50,2
+1008,Pupa,2,41,1,0,18,14,5,20,55,40,2
+1009,Condor,3,105,15,0,43,32,10,40,65,55,4
+1012,Roda Frog,4,120,18,0,52,38,15,50,70,60,1
+1004,Hornet,4,190,22,0,64,43,20,60,75,65,4
+1023,Orc Warrior,24,1400,180,10,850,600,200,500,120,100,2

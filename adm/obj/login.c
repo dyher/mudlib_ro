@@ -113,12 +113,8 @@ void game_input(string line)
     else if (cmd == "unequip") player->unequip_slot(arg);
     else if (cmd == "use") player->use_item(arg);
     else if (cmd == "learn") player->learn_skill(arg);
-    else if (cmd == "cast") {
-        string sk, tgt;
-        int s2 = strsrch(arg, " ");
-        if (s2 == -1) { sk = arg; tgt = ""; }
-        else { sk = arg[0..s2-1]; tgt = arg[s2+1..]; }
-        player->cast_skill(sk, tgt);
+    else if (cmd == "cast" || cmd == "use") {
+        player->cast_skill(arg);
     }
     else if (cmd == "save") { player->save(); write("Saved.\n"); }
     else if (cmd == "iteminfo") call_other("/cmds/iteminfo", "main", arg);

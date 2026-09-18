@@ -1,9 +1,9 @@
 // rAthena-aligned skill database
-// Format: SkillID,Name,JobID,MaxLv,SPCost,Type,Power
-7,Bash,1,10,8,attack,150
-9,Fire Bolt,2,10,12,attack,130
-10,Cold Bolt,2,10,12,attack,130
-11,Lightning Bolt,2,10,12,attack,130
-17,Heal,4,10,13,heal,150
-46,Double Strafe,3,10,12,attack,140
-53,Mammonite,5,10,12,attack,160
+// SkillID,Name,JobID,MaxLv,SPCost,Type,Power,Element
+7,Bash,1,10,8,attack,150,0
+9,Fire Bolt,2,10,12,attack,130,3
+10,Cold Bolt,2,10,12,attack,130,1
+11,Lightning Bolt,2,10,12,attack,130,4
+17,Heal,4,10,13,heal,150,0
+46,Double Strafe,3,10,12,attack,140,0
+53,Mammonite,5,10,12,attack,160,0
