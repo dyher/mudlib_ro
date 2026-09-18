@@ -1,10 +1,13 @@
 # 存檔（執行期產生）
-data/accounts/
-data/players/
+data/accounts/*.txt
+data/players/*.o
 
 # 編譯快取
 *.o
 *.b
 
 # 執行期 log
-log/
+log/*.log
+
+# 保留目錄結構
+!.gitkeep
