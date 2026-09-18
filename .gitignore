@@ -1,0 +1,10 @@
+# 存檔（執行期產生）
+data/accounts/
+data/players/
+
+# 編譯快取
+*.o
+*.b
+
+# 執行期 log
+log/
