@@ -3,6 +3,8 @@
 // After login completes, exec() transfers interactive status to the user body.
 
 inherit "/feature/save";
+inherit "/feature/dbase";
+
 
 static object my_body;
 
@@ -20,7 +22,7 @@ void set_body(object body)
 void logon()
 {
     object logind;
-    seteuid(getuid());
+    seteuid(getuid());  // use own uid as euid (ES2 style)
     logind = load_object("/adm/daemons/logind");
     if (logind) {
         logind->logon(this_object());

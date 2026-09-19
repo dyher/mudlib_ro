@@ -6,7 +6,6 @@ inherit "/feature/dbase";
 inherit "/feature/attribute";
 inherit "/feature/name";
 inherit "/feature/save";
-inherit "/feature/multiplayer";
 
 // Forward prototypes
 void choose_job(int job_id);
@@ -664,11 +663,6 @@ void look_room()
         write("Exits:");
         for (i = 0; i < sizeof(dirs); i++) write(" " + dirs[i]);
         write("\n");
-    }
-    {
-        string *others = list_players_in_room();
-        if (sizeof(others) > 0)
-            write("Players here: " + implode(others, ", ") + "\n");
     }
     if (room) {
         mapping npcs = room->query("npcs");

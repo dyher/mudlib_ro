@@ -15,10 +15,9 @@ object connect(int port)
     
     debug_message("RO master: connect() port=" + port + "\n");
     
-    err = catch(login_ob = clone_object("/adm/obj/login"));
+    err = catch(login_ob = new("/obj/login"));
     if (err) { write("Login failed: " + err + "\n"); return 0; }
     
-    export_uid(login_ob);
     return login_ob;
 }
 
@@ -84,3 +83,28 @@ void log_error(string file, string message)
 }
 
 mixed compile_object(string file) { return 0; }
+
+// ES2 style: determine the UID for newly created objects
+// This ensures login objects and other critical objects get Root UID
+string creator_file(string file)
+{
+    // All objects get Root UID for our simple RO architecture
+    return "Root";
+}
+
+string privileged_file(string file)
+{
+    if (file[0..4] == "/adm/") return "Root";
+    return 0;
+}
+
+string object_name(string file)
+{
+    return file;
+}
+
+// ES2 style: allow objects to set their effective UID
+int valid_seteuid(object ob, string euid)
+{
+    return 1;  // allow all seteuid operations for our simple RO architecture
+}

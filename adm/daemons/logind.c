@@ -7,6 +7,7 @@
 static void get_account(string arg, object ob);
 static void get_password(string arg, object ob);
 static void create_new_user(string name, object ob);
+void enter_world(object ob);
 
 void logon(object ob)
 {
