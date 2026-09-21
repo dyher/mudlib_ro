@@ -15,7 +15,14 @@ object connect(int port)
     
     debug_message("RO master: connect() port=" + port + "\n");
     
-    err = catch(login_ob = new("/obj/login"));
+    if (port == 6900) {
+        // RO Login Server (Binary Protocol)
+        err = catch(login_ob = new("/obj/ro/login"));
+    } else {
+        // Telnet MUD Login
+        err = catch(login_ob = new("/obj/login"));
+    }
+    
     if (err) { write("Login failed: " + err + "\n"); return 0; }
     
     return login_ob;
