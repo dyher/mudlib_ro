@@ -10,23 +10,25 @@ string simul_efun_object()
 
 object connect(int port)
 {
-    object login_ob;
-    mixed err;
+    object ob;
     
-    debug_message("RO master: connect() port=" + port + "\n");
-    
+    // 路由 6900 端口到 RO 二進制協議處理器
     if (port == 6900) {
-        // RO Login Server (Binary Protocol)
-        err = catch(login_ob = new("/obj/ro/login"));
-    } else {
-        // Telnet MUD Login
-        err = catch(login_ob = new("/obj/login"));
+        ob = new("/obj/ro/login");
+        return ob;
     }
     
-    if (err) { write("Login failed: " + err + "\n"); return 0; }
+    // 路由 8080 端口到 HTTP API 處理器
+    if (port == 8080) {
+        ob = new("/adm/obj/http_api");
+        return ob;
+    }
     
-    return login_ob;
+    // 預設 Telnet 端口 (例如 5001)
+    ob = new("/std/object/player");
+    return ob;
 }
+
 
 // Master has Root euid, so it can create objects on behalf of login
 // Load a room/map object (master has Root euid)
@@ -65,7 +67,9 @@ string *epilog()
         "/std/system/npcscript",
         "/adm/obj/updater",
         "/std/object/player",
-        "/cmds/iteminfo"
+        "/cmds/iteminfo",
+        "/adm/obj/test_sqlite",
+        "/adm/obj/test_crypto"
     });
 }
 

@@ -1,44 +1,68 @@
-// obj/ro/login.c - RO Login Server Handler (極簡測試版)
+// obj/ro/login.c - RO Protocol Handler (Final Perfect Version)
+
+void handle_packet(int id, buffer pkt);
+int get_pkt_len(int id);
+
+static buffer in_buf;
 
 void create() {
-    debug_message("RO: obj/ro/login object created!\n");
+    in_buf = allocate_buffer(0);
 }
 
-// 當 Binary 端口收到數據時，Driver 會自動呼叫此函數
+// 解決 ES2 架構的 logon() 呼叫錯誤
+void logon() {
+    // RO 客戶端不需要歡迎詞，保持靜默
+}
+
+int get_pkt_len(int id) {
+    switch(id) {
+        case 0x0064: return 55;
+        case 0x0072: return 19;
+        case 0x00A4: return 6;
+        case 0x00F3: return 10;
+        default: return 0;
+    }
+}
+
 void process_input(buffer data) {
-    int data_len = sizeof(data);
-    int i;
-    int header;
-    string username;
-    string password;
+    int pkt_len, id;
+    buffer pkt;
     
-    debug_message("RO: process_input called! Received " + data_len + " bytes.\n");
-    
-    // 檢查是否至少有 2 bytes 的 Header
-    if (data_len >= 2) {
-        // 讀取 Little-Endian 的 2 bytes Header
-        header = data[0] | (data[1] << 8);
+    in_buf = in_buf + data;
+
+    while(sizeof(in_buf) >= 2) {
+        id = in_buf[0] | (in_buf[1] << 8);
+        pkt_len = get_pkt_len(id);
         
-        // 判斷是否為 0x0064 (CA_LOGIN) 且長度足夠 (55 bytes)
-        if (header == 0x0064 && data_len >= 55) {
-            username = "";
-            password = "";
-            
-            // 提取 Username (Bytes 2..25)
-            for (i = 2; i < 26; i++) {
-                if (data[i] == 0) break;
-                username += sprintf("%c", data[i]);
-            }
-            
-            // 提取 Password (Bytes 26..49)
-            for (i = 26; i < 50; i++) {
-                if (data[i] == 0) break;
-                password += sprintf("%c", data[i]);
-            }
-            
-            debug_message("RO: ✅ SUCCESS! Parsed CA_LOGIN -> User: " + username + " / Pass: " + password + "\n");
-        } else {
-            debug_message("RO: Unknown packet: 0x" + sprintf("%04X", header) + " (Len: " + data_len + ")\n");
+        if (pkt_len == 0) {
+            debug_message("RO: Unknown packet 0x" + sprintf("%04X", id) + "\n");
+            return;
         }
+        
+        if (sizeof(in_buf) < pkt_len) break; 
+        
+        pkt = in_buf[0 .. pkt_len - 1];
+        handle_packet(id, pkt);
+        
+        if (sizeof(in_buf) > pkt_len) {
+            in_buf = in_buf[pkt_len .. sizeof(in_buf) - 1];
+        } else {
+            in_buf = allocate_buffer(0);
+        }
+    }
+}
+
+void handle_packet(int id, buffer pkt) {
+    string user, pass;
+    int i;
+    
+    debug_message("RO: [OK] Parsed Packet 0x" + sprintf("%04X", id) + " (Len: " + sizeof(pkt) + ")\n");
+    
+    if (id == 0x0064) {
+        user = "";
+        pass = "";
+        for(i = 2; i < 26; i++) { if(pkt[i]==0) break; user += sprintf("%c", pkt[i]); }
+        for(i = 26; i < 50; i++) { if(pkt[i]==0) break; pass += sprintf("%c", pkt[i]); }
+        debug_message("RO: Login -> " + user + " / " + pass + "\n");
     }
 }
