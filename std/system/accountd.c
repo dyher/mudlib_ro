@@ -1,44 +1,35 @@
-// std/system/accountd.c — account management (preloaded)
+// 強制宣告底層 Efun，繞過 LPC 詞法分析器的黑盒
+string sqlite3_query(int, string);
 
-string acc_path(string n) { return "/data/accounts/" + n + ".txt"; }
+// /std/system/accountd.c
+#define DB_PATH "/tmp/ro_accounts.db"
 
-object S() { return find_object("/std/system/storage"); }
-
-int exists_account(string n)
-{
-    return S()->exists(acc_path(n)) >= 0;
+void create() {
+    int db = sqlite3_open(DB_PATH);
+    sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS accounts (id INTEGER PRIMARY KEY, username TEXT UNIQUE, password TEXT)");
+    sqlite3_close(db);
 }
 
-int create_account(string n, string p)
-{
-    if (exists_account(n)) return 0;
-    return S()->save_text(acc_path(n), p + "\n\n");
+int register_account(string user, string pass) {
+    int db = sqlite3_open(DB_PATH);
+    string sql = "INSERT INTO accounts (username, password) VALUES ('" + user + "', '" + pass + "')";
+    mixed err = catch(sqlite3_exec(db, sql));
+    sqlite3_close(db);
+    return !err;
 }
 
-int check_account(string n, string p)
-{
-    string c = S()->load_text(acc_path(n));
-    string *lines;
-    if (!c) return 0;
-    lines = explode(c, "\n");
-    return (sizeof(lines) > 0 && lines[0] == p);
-}
-
-string query_char(string n)
-{
-    string c = S()->load_text(acc_path(n));
-    string *lines;
-    if (!c) return 0;
-    lines = explode(c, "\n");
-    if (sizeof(lines) > 1 && lines[1] != "") return lines[1];
+int verify_account(string user, string pass) {
+    int db = sqlite3_open(DB_PATH);
+    string sql = "SELECT password FROM accounts WHERE username='" + user + "'";
+    string res = sqlite3_query(db, sql);
+    sqlite3_close(db);
+    
+    if (res == "ERROR" || res == "") return 0;
+    
+    // res 格式: "password\ntarget_password"
+    string *lines = explode(res, "\n");
+    if (sizeof(lines) > 1) {
+        return (lines[1] == pass);
+    }
     return 0;
-}
-
-int set_char(string n, string ch)
-{
-    string c = S()->load_text(acc_path(n));
-    string *lines;
-    if (!c) return 0;
-    lines = explode(c, "\n");
-    return S()->save_text(acc_path(n), lines[0] + "\n" + ch + "\n");
 }
