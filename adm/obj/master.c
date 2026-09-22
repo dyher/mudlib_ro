@@ -72,7 +72,8 @@ string *epilog()
         "/std/object/player",
         "/cmds/iteminfo",
         "/adm/obj/test_sqlite",
-        "/adm/obj/test_crypto"
+        "/adm/obj/test_crypto",
+        "/adm/obj/test_http_client"
     });
 }
 
