@@ -19,6 +19,9 @@ object connect(int port)
     }
     
     // 路由 8080 端口到 HTTP API 處理器
+    if (port == 8081) {
+        return new("/adm/obj/ws_api");
+    }
     if (port == 8080) {
         ob = new("/adm/obj/http_api");
         return ob;
